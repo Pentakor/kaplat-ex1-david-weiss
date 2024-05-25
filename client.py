@@ -5,14 +5,14 @@ import json
 base_address = "http://localhost:6767"
 #FIST REQUEST
 
-params = {'id': 325483006, 'year': 2003}
+params = {'id': 12345678, 'year': 2003}
 response = requests.get(base_address + '/test_get_method', params=params)
 print(response.text)
 response_text = response.text
 
 #SECOND REQUEST
 
-request_json = {'id': 325483006, 'year': 2003, 'requestId':str(response_text)}
+request_json = {'id': 12345678, 'year': 2003, 'requestId':str(response_text)}
 response = requests.post(base_address + '/test_post_method', json=request_json)
 print(response.text)
 
