@@ -1,0 +1,20 @@
+version: "3"
+services:
+  postgres:
+    image: theshultz/kaplat-books-postgres-instance:latest
+#to expose postgres container externally
+    ports:
+      - "5432:5432"
+  mongo:
+    image: theshultz/kaplat-books-mongo-instance:latest
+#to expose mongo container externally
+    ports:
+      - "27017:27017"
+  app:
+    image: pentakorr/my-python-app:latest
+    restart: on-failure:2
+    ports:
+      - "4785:8574"
+    depends_on:
+      - postgres
+      - mongo

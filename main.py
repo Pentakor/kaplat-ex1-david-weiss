@@ -5,6 +5,50 @@ import logging
 from datetime import datetime
 import time
 import os
+from sqlalchemy import func
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base
+from pymongo import MongoClient
+
+# Connect to the MongoDB server
+client = MongoClient("mongodb://mongo:27017/")
+#client = MongoClient("mongodb://localhost:27017/")
+
+# Access the database
+db = client["books"]
+
+# Access the collection
+collection = db["books"]
+
+# Database connection
+#DATABASE_URL = "postgresql://postgres:docker@localhost:5432/books"
+DATABASE_URL = "postgresql://postgres:docker@postgres:5432/books"
+engine = create_engine(DATABASE_URL)
+
+
+# Base class for models
+Base = declarative_base()
+
+# Define the Book model
+class BookDB(Base):
+    __tablename__ = 'books'
+
+    rawid = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+    author = Column(String, nullable=False)
+    year = Column(Integer)
+    price = Column(Integer)
+    genres = Column(String)
+
+    def __repr__(self):
+        return f"<Book(title={self.title}, author={self.author}, year={self.year}, price={self.price}, genres={self.genres})>"
+
+
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
+
 
 app = Flask(__name__)
 GENRES = ["SCI_FI", "NOVEL", "HISTORY", "MANGA", "ROMANCE", "PROFESSIONAL"]
@@ -75,7 +119,10 @@ class Book:
 
     @staticmethod
     def json_to_book(book_json, book_id):
-        book_data = book_json
+        if isinstance(book_json, str):
+            book_data = json.loads(book_json)  # Parse JSON string to dictionary
+        else:
+            book_data = book_json  # If it's already a dictionary, use it directly
         return Book(
             my_id=book_id,
             title=book_data["title"],
@@ -92,6 +139,7 @@ class ServerHelper:
     def addbook(new_book):
         global books_df
         global current_id
+        #print(f"\n\n currentia id:{current_id} \n\n")
         books_df.loc[len(books_df.index)] = [current_id, new_book.title, new_book.author, new_book.price, new_book.year,
                                              new_book.genres, new_book.title.lower(), new_book.author.lower()]
 
@@ -157,7 +205,9 @@ class ServerHelper:
             "result": result,
             "errorMessage": error
         }
-        return json.dumps(msg)
+        #return json.dumps(msg).replace("\\n", "").replace("\\", "").replace("\"[", "[").replace("]\"", "]")
+        return json.dumps(msg ,separators=(',', ':'))
+
 
     @staticmethod
     def filter_by_params():
@@ -199,6 +249,11 @@ class Server:
         start_time = time.perf_counter() * 1000
         logger.info(info_request('/books/health', 'GET'))
         logger.debug(debug_request(round(time.perf_counter()*1000 - start_time)))
+        books = session.query(BookDB).all()
+        for book in books:
+            print(
+                f"ID: {book.rawid}, Title: {book.title}, Author: {book.author}, Year: {book.year}, Price: {book.price}, Genres: {book.genres}")
+
         return "OK", 200
 
     @staticmethod
@@ -215,6 +270,7 @@ class Server:
         # CHECK IF EVERYTHING IS OK
         return_code, result, error_message = ServerHelper.is_valid_post(raw_book)
         if return_code == 200:
+
             new_book = Book.json_to_book(raw_book, current_id)
             dict_title = new_book.title
 
@@ -224,6 +280,7 @@ class Server:
                     len(books_df), current_id)))
 
             ServerHelper.addbook(new_book)
+            DataBasehelper.post_book(new_book)
         else:
             booklogger.error(log_message(error_message))
 
@@ -267,7 +324,7 @@ class Server:
         else:
             result = 400
         logger.debug(debug_request(round(time.perf_counter()*1000 - start_time)))
-        return ServerHelper.return_message(json_array, ""), result
+        return ServerHelper.return_message(json.loads(json_array), ""), result
 
     @staticmethod
     @app.route('/book', methods=['GET'])
@@ -282,7 +339,9 @@ class Server:
         return_df = return_df.drop(columns=['lower_title', 'lower_author'])
         try:
             row = return_df.iloc[0].to_dict()
-            json_data = json.dumps(row, indent=4)
+            if isinstance(row['genres'], str):  # If genres is a string (e.g., "[\"ROMANCE\"]")
+                row['genres'] = eval(row['genres'])
+            json_data = row
             print(json_data)
             booklogger.debug(log_message("Fetching book id {0} details".format(requested_id)))
             logger.debug(debug_request(round(time.perf_counter()*1000 - start_time)))
@@ -313,6 +372,7 @@ class Server:
             row = return_df.iloc[0].to_dict()
             old_price = row['price']
             books_df.loc[books_df['id'] == requested_id, 'price'] = new_price
+            DataBasehelper.update_price_db(requested_id, new_price)
             booklogger.info(log_message("Update Book id [{0}] price to {1}".format(requested_id, new_price)))
             booklogger.debug(log_message("Book [{0}] price change: {1} --> {2}".format(requested_id, old_price, new_price)))
             logger.debug(debug_request(round(time.perf_counter()*1000 - start_time)))
@@ -338,12 +398,13 @@ class Server:
             row = return_df.iloc[0].to_dict()
             books_df = books_df.drop(books_df[books_df['id'] == int(requested_id)].index)
             num_rows = books_df.shape[0]
+            DataBasehelper.delete_book_by_id(requested_id)
             booklogger.info(log_message("Removing book [{0}]".format(title_value)))
             booklogger.debug(log_message(
                 "After removing book [{0}] id: [{1}] there are {2} books in the system"
                 .format(title_value, requested_id, len(books_df))))
             logger.debug(debug_request(round(time.perf_counter()*1000 - start_time)))
-            return ServerHelper.return_message(str(num_rows), ""), 200
+            return ServerHelper.return_message(num_rows, ""), 200
         except:
             booklogger.error(log_message("Error: no such Book with id " + requested_id))
             logger.debug(debug_request(round(time.perf_counter()*1000 - start_time)))
@@ -394,6 +455,133 @@ class Server:
             logger.debug(debug_request(round(time.perf_counter() * 1000 - start_time)))
             return "No such logger in the system", 404
 
+    @staticmethod
+    @app.route('/database', methods=['GET'])
+    def printmeuppleases():
+        books = session.query(BookDB).all()
+            # Print the rawid field of each book
+        print("MONGODB:\n")
+        booksmongo = collection.find()  # Retrieve all documents in the collection
+        for bookmongo in booksmongo:
+            print(bookmongo)
+        print("POSTGERSS:\n")
+        for book in books:
+            print(
+                f"ID: {book.rawid}, Title: {book.title}, Author: {book.author}, Year: {book.year}, Price: {book.price}, Genres: {book.genres}")
+        return "OK", 200
+
+
+class DataBasehelper:
+
+    @staticmethod
+    def delete_book_by_id(book_id):
+        # Find the book by its ID
+        book = session.query(BookDB).filter(BookDB.rawid == book_id).first()
+
+        if book:
+            print(book_id)
+            query = {'rawid': int(book_id)}
+            collection.delete_one(query)
+
+            session.delete(book)
+
+            # Commit the changes to the database
+            session.commit()
+            print(f"Book with ID {book_id} has been deleted.")
+        else:
+            print(f"Book with ID {book_id} not found.")
+
+
+    @staticmethod
+    def update_price_db(book_id, new_price):
+        # Find the book by its ID
+        book = session.query(BookDB).filter(BookDB.rawid == book_id).first()
+
+
+        if book:
+
+            result = collection.update_one(
+                {"rawid": book_id},  # Filter to find the book by rawid
+                {"$set": {"price": new_price}}  # Update the price field
+            )
+            # Update the price
+            book.price = new_price
+
+            # Commit the changes to the database
+            session.commit()
+            print(f"Price of book with ID {book_id} updated to {new_price}")
+        else:
+            print(f"Book with ID {book_id} not found.")
+
+
+    @staticmethod
+    def post_book(book_data):
+        dbbook = BookDB(
+            rawid=book_data.id,
+            title=book_data.title,
+            author=book_data.author,
+            year=book_data.year,
+            price=book_data.price,
+            genres=list(book_data.genres)
+        )
+        session.add(dbbook)
+        session.commit()
+        dbbook_dict = {
+            "rawid": book_data.id,
+            "title": book_data.title,
+            "author": book_data.author,
+            "year": book_data.year,
+            "price": book_data.price,
+            "genres": book_data.genres  # MongoDB can handle arrays directly
+        }
+
+        # Insert the dictionary into the MongoDB collection
+        collection.insert_one(dbbook_dict)
+
+
+    @staticmethod
+    def get_max_id():
+        max_id = session.query(func.max(BookDB.rawid)).scalar()
+        if max_id is not None:
+            print(f"The highest ID in the database is: {max_id}")
+            return max_id
+        else:
+            return 0
+
+    @staticmethod
+    def load_temp_books():
+        global current_id
+        books = session.query(BookDB).all()
+        for book in books:
+            #print(
+            #   f"ID: {book.rawid}, Title: {book.title}, Author: {book.author}, Year: {book.year}, Price: {book.price}, Genres: {book.genres}")
+
+            # Use the object's __dict__ attribute to get the data and exclude unwanted attributes
+            book_dict = {key: value for key, value in book.__dict__.items() if not key.startswith('_')}
+            # Convert the dictionary to JSON
+            book_json = book_dict
+            current_id = book.rawid
+            new_book = Book.json_to_book(book_json, current_id)
+            ServerHelper.addbook(new_book)
+        current_id = DataBasehelper.get_max_id()
+
+
+
+
+
 
 if __name__ == "__main__":
-    app.run(host='localhost', port=8574, debug=True)
+    # Create the table
+
+    # Query all books from the 'books' table
+
+
+    print("\n\n\n\n")
+    #Display each book's data
+    DataBasehelper.load_temp_books()
+    #print(f"\n current id:{current_id} \n\n\n")
+
+    app.run(host='0.0.0.0', port=8574, debug=True)
+
+
+    session.close()
