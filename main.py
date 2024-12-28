@@ -140,6 +140,7 @@ class ServerHelper:
         global books_df
         global current_id
         #print(f"\n\n currentia id:{current_id} \n\n")
+        #genres_json = json.dumps(new_book.genres)
         books_df.loc[len(books_df.index)] = [current_id, new_book.title, new_book.author, new_book.price, new_book.year,
                                              new_book.genres, new_book.title.lower(), new_book.author.lower()]
 
@@ -206,7 +207,7 @@ class ServerHelper:
             "errorMessage": error
         }
         #return json.dumps(msg).replace("\\n", "").replace("\\", "").replace("\"[", "[").replace("]\"", "]")
-        return json.dumps(msg ,separators=(',', ':'))
+        return json.dumps(msg)#,separators=(',', ':'))
 
 
     @staticmethod
@@ -315,6 +316,7 @@ class Server:
         filtered_df, flag = ServerHelper.filter_by_params()
         filtered_df = filtered_df.sort_values(by='lower_title')
         filtered_df = filtered_df.drop(columns=['lower_title', 'lower_author'])
+        filtered_df['genres'] = filtered_df['genres'].apply(lambda x: json.loads(x) if isinstance(x, str) else x)
         json_array = filtered_df.to_json(orient='records')
         count_row = filtered_df.shape[0]
         result = 0
@@ -391,10 +393,10 @@ class Server:
         logger.info(info_request('/book', 'DELETE'))
         global books_df
         requested_id = request.args.get('id')
-        return_df = books_df[books_df['id'] == int(requested_id)]
-        title_value = return_df.loc[return_df['id'] == int(requested_id), 'title'].values[0]
-        return_df = return_df.drop(columns=['lower_title', 'lower_author'])
         try:
+            return_df = books_df[books_df['id'] == int(requested_id)]
+            title_value = return_df.loc[return_df['id'] == int(requested_id), 'title'].values[0]
+            return_df = return_df.drop(columns=['lower_title', 'lower_author'])
             row = return_df.iloc[0].to_dict()
             books_df = books_df.drop(books_df[books_df['id'] == int(requested_id)].index)
             num_rows = books_df.shape[0]
@@ -464,10 +466,6 @@ class Server:
         booksmongo = collection.find()  # Retrieve all documents in the collection
         for bookmongo in booksmongo:
             print(bookmongo)
-        print("POSTGERSS:\n")
-        for book in books:
-            print(
-                f"ID: {book.rawid}, Title: {book.title}, Author: {book.author}, Year: {book.year}, Price: {book.price}, Genres: {book.genres}")
         return "OK", 200
 
 
@@ -522,7 +520,7 @@ class DataBasehelper:
             author=book_data.author,
             year=book_data.year,
             price=book_data.price,
-            genres=list(book_data.genres)
+            genres=f'["' + '","'.join(book_data.genres) + '"]'
         )
         session.add(dbbook)
         session.commit()
