@@ -18,7 +18,7 @@ print(response.text)
 
 #THIRD REQUEST
 
-new_id = (325483006 - 123503) % 92
+new_id = (10000000 - 123503) % 92
 new_year = (2003 + 123) % 45
 request_json = {'id': new_id, 'year': new_year}
 response_dict = json.loads(response.text)
