@@ -1,6 +1,7 @@
-from Server import *
+from server import *
+from env_variables import *
 
 if __name__ == "__main__":
 
-    app.run(host='0.0.0.0', port=8574, debug=False)
+    app.run(host=HOST, port=PORT, debug=False)
     session.close()
