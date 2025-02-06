@@ -1,4 +1,7 @@
 from flask import Flask, request
+from flask_jwt_extended import (
+    JWTManager, create_access_token
+)
 import json
 from database import *
 from log_manager import *
@@ -9,6 +12,23 @@ request_number = 0
 logs = LogManager()
 first_request = True
 
+app.config['JWT_SECRET_KEY'] = 'pass'
+jwt = JWTManager(app)
+
+# Dummy user data
+users = {"admin": "password123"}
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    if username in users and users[username] == password:
+        access_token = create_access_token(identity=username)
+        return access_token, 200
+    else:
+        return "Invalid username or password", 401
 
 class Server:
     # Contains methods that are relevant for the server application to run
@@ -78,7 +98,7 @@ class Server:
                 return_code = HTTP_CONFLICT
                 error_message = "Error: Can't create new Book that its year [" + str(cur_year) + \
                                 "] is not in the accepted range [1940 -> 2100]"
-            elif not DataBaseHelper.genres_match(data_json["genres"]): # If the genres do not match
+            elif not DataBaseHelper.genres_match(data_json["genres"]):  # If the genres do not match
                 return_code = HTTP_CONFLICT
                 error_message = "Error: Invalid genres"
 
@@ -143,6 +163,7 @@ class Server:
     def post_book():
         # Check and add a new  book to the databases from the http request
         global request_number
+
         request_number += 1
         result = ""
         start_time = time.perf_counter() 
@@ -150,7 +171,7 @@ class Server:
 
         # Get data from the POST request
         raw_book = request.get_json()
-        
+        print(raw_book)
         return_code, error_message = Server.ServerHelper.is_valid_post(raw_book)
         if return_code == HTTP_OK:
 
@@ -336,6 +357,8 @@ class Server:
             logs.get_requests().debug(logs.debug_request(start_time, request_number))
             return "No such log level", HTTP_NOTFOUND
 
+
+
     @staticmethod
     @app.route('/logs/level', methods=['GET'])
     def get_logger_level():
@@ -354,6 +377,13 @@ class Server:
         else:
             logs.get_requests().debug(logs.debug_request(start_time, request_number))
             return "No such logger in the system", HTTP_NOTFOUND
+
+    @staticmethod
+    @app.route('/genre', methods=['GET'])
+    def get_genres():
+        query = session.query(Genre).all()
+        genres_list = [Genre.name for Genre in query]
+        return Server.ServerHelper.return_message(genres_list, ""), 200
 
     @staticmethod
     @app.route('/genre', methods=['POST'])
@@ -377,7 +407,11 @@ class Server:
             result = genre_id
 
         else:
-            error_message = "Error: Genre already exists in the system."
+            if return_code == 409:
+                error_message = "Error: Genre already exists in the system."
+            else:
+                error_message = "Error: Genre cannot be empty text"
+
             logs.get_books().error(logs.message(error_message, request_number))
 
         logs.get_requests().debug(logs.debug_request(start_time, request_number))

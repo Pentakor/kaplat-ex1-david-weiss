@@ -71,6 +71,8 @@ class DataBaseHelper:
     @staticmethod
     def genres_match(i_genres):
         # Checks if the genres in the list are present in the PosgreSQL DB
+        if not i_genres:
+            return False
         genres = [genre.name for genre in session.query(Genre.name).all()]
         for item in i_genres:
             if item not in genres:
@@ -128,7 +130,8 @@ class DataBaseHelper:
     @staticmethod
     def add_genre(new_genre_name):
         # Adds the provided genre to the PostgreSQL DB
-
+        if new_genre_name == "":
+            return 400, -1
         new_genre = session.query(Genre).filter_by(name=new_genre_name).first()
         if not new_genre:
             new_genre = Genre(name=new_genre_name)
@@ -136,7 +139,7 @@ class DataBaseHelper:
             session.commit()
             return 200, new_genre.id
         else:
-            return 400, -1
+            return 409, -1
 
     @staticmethod
     def sync_dbs():
