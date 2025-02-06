@@ -1,0 +1,308 @@
+html, body {
+    height: 100%; /* Ensure the body covers the entire screen height */
+}
+body {
+    background-color: #629584; /* Dark Gray */
+    color: #E2F1E7; /* Light text for contrast */
+    font-family: Arial, sans-serif; /* Font family */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    height: 100%; /* Ensure the body covers the entire viewport height */
+}
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.container {
+    display: flex;
+    width: 100%;
+    margin: 0 auto;
+    height: 100%; /* Ensure the container takes up the full height */
+}
+.left {
+    position: fixed; /* Make the left container fixed on the screen */
+    top: 0;
+    left: 0;
+    width: 16%; /* Adjust the width as needed */
+    height: 100%; /* Ensure the left container takes up the full height */
+    display: flex;
+    flex-direction: column;
+    background-color: #387478; /* Darker Blue */
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+.right {
+    margin-left: 20%; /* Adjust the margin to match the width of the left container */
+    display: flex;
+    flex-direction: column;  
+    padding: 20px;
+    min-height: 100vh; /* Ensure the right container takes up the full viewport height */
+}
+.genrediv {
+    background-color:#a2b9bc ;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px; /* Add space between the genre dropdown and the next element */
+    margin-top: 10px;
+}
+form {
+    display: flex;
+    flex-direction: column;
+}
+label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+input[type="text"],
+input[type="number"] {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+input[type="checkbox"] {
+    transform: scale(1.5); /* Scale the checkbox to make it bigger */
+    margin-right: 10px; /* Add some space between the checkbox and the label */
+    vertical-align: middle; /* Align the checkbox vertically in the middle */
+}
+
+
+.dropdown {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 150px; /* Add space between the dropdown and the next element */
+}
+
+.dropdown2 {
+    position: relative;
+    display: inline-block;
+    align-items: center;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.1);
+    min-width: 240px; /* Increase the minimum width */
+    background: #343a40;
+    padding: 10px;
+    border-radius: 8px;
+    z-index: 1;
+    margin-top: 5px;
+    overflow-y: auto;
+    max-height: 120px;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+}
+.checkbox-group div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px; /* Add space between each checkbox-label pair */
+}
+.checkbox-group label {
+    font-weight: normal;
+    vertical-align: middle; /* Align the label vertically in the middle */
+}
+.table-container {
+    max-height: 400px; /* Set the maximum height for the table container */
+   
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+thead {
+    display: table-header-group;
+    width: 100%;
+    table-layout: fixed; /* Ensure the header part above the scroll is the same dark color */
+    background: #343a40;
+}
+tbody {
+    display: block; /* Change display to block to enable scrolling */
+    max-height: 400px; /* Set the height of the table body */
+    overflow-y: auto; /* Enable scroll within the table body */
+    width: 100%;
+}
+thead, tbody tr {
+    display: table; /* Ensure rows and header are displayed as table */
+    width: 100%;
+    table-layout: fixed; /* Ensure the layout is fixed */
+}
+th, td {
+    padding: 12px 16px;
+    text-align: left;
+}
+th {
+    background: #343a40;
+    color: #ffffff;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+tr:nth-child(even) {
+    background: #e9ecef;
+}
+tr:hover {
+    background: #dee2e6;
+}
+td {
+    color: #212529;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Styling for the green button */
+.edit-button {
+    font-size: 20px;
+    background-color: transparent;
+    color: green;
+    border: none;
+    padding: 5px 5px;
+    cursor: pointer;
+    border-radius: 4px; /* Optional: Add rounded corners */
+    transition: background-color 0.3s ease; /* Optional: Add transition for hover effect */
+}
+
+.edit-button:hover {
+    background-color: GREEN; /* Optional: Darker green on hover */
+    color: white;
+}
+
+.edit-button-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.1);
+    min-width: 160px;
+    background: #343a40;
+    padding: 10px;
+    border-radius: 8px;
+    z-index: 1;
+    margin-top: 5px;
+}
+
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 40%; /* Could be more or less, depending on screen size */
+  height: 20%;
+  color : black;
+  border-radius: 8px;
+  
+}
+.modal-under {
+  font-size: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Horizontally center */
+  align-items: center; /* Vertically center (if needed) */
+  
+}
+/* The Close Button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.delete-button {
+    padding: 10px 20px;
+    background-color: #E2F1E7; /* Light color */
+    color: #243642; /* Dark Gray */
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.delete-button:hover {
+    background-color: #E31837; /* Slightly darker light color */
+}
+
+.priceDiv {
+    display: inline-block;
+    margin-top: 60px;
+    background-color: #a2b9bc;
+    padding: 10px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+.priceChangeForm {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.toolbutton, input[type="submit"]{
+    padding: 10px 20px;
+    background-color: #E2F1E7; /* Light color */
+    color: #243642; /* Dark Gray */
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    height: 40px;
+    transition: background-color 0.3s ease;
+}
+.toolbutton,input[type="submit"]:hover {
+    background-color: #d1e7dd; /* Slightly darker light color */
+}
+
+/* Add the new filter class */
+.filter {
+    background-color: #a2b9bc;
+    display: flex;
+    flex-direction: row; /* Ensure elements are in one line */
+    align-items: center;
+    margin-bottom: 10px; /* Add space between the filter and the table */
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.filter form {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Two columns */
+    gap: 5px; /* Add some space between the elements */
+}
+.filter form > * {    flex: 1 1 45%; /* Ensure elements take up approximately half the width */}

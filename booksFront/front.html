@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Front</title>
+    <link rel="stylesheet" type="text/css" href="front.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <form id="bookForm">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title">
+                
+                <label for="author">Author:</label>
+                <input type="text" id="author" name="author">
+                
+                <label for="year">Publish Year:</label>
+                <input type="number" id="year" name="year" min="0">
+                
+                <label for="price">Price:</label>
+                <input type="number" id="price" name="price" min="0">
+                
+                <div class="dropdown">
+                    <button type="button" id="dropdownButton" class="toolbutton">Select Genres</button>
+                    <div class="dropdown-content" id="dropdownContent">
+                     
+                    </div>
+                </div>               
+                <input type="submit" value="Submit">
+                
+            </form>
+            <div class="genrediv">
+                <form id="genreForm">
+                    <label for="genre">New genre:</label>
+                    <input type="text" id="genre" name="genre">
+                    <input type="submit" value="Add Genre">
+                </form>
+            </div>
+
+        </div>
+
+        <div class="right">
+            <div class="header">
+                <h1>Books in the database: <span id="variableText"></span></h1>
+                <button id="refreshButton" class="toolbutton">Refresh</button>
+            </div>
+
+            <div class="filter">
+                <form id="filterForm">
+                    <input type="text" id="filteredauthor" placeholder="Author"  />
+                    <input type="number" id="priceGreater" placeholder="Price bigger than"  />
+                    <input type="number" id="priceLess" placeholder="Price lesser than" />
+                    <input type="number" id="yearGreater" placeholder="Year bigger thab" />
+                    <input type="number" id="yearLess" placeholder="Year lesser than"  />
+                    <div class="dropdown2">
+                        <button type="button" id="genresFilter" class="toolbutton">Select Genres</button>
+                        <div class="dropdown-content" id="genreDropdownContent">
+                         
+                        </div>
+                    </div>    
+                    <input type="submit" value="Apply" id="applyfilters" class="toolbutton">
+                    
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="booksTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Year</th>
+                            <th>Price</th>
+                            <th>Genres</th>
+                            <th></th>                  
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Rows will be inserted here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="priceDiv">
+                <form class ="priceChangeForm" id="priceChangeForm">                
+                    <label for="bookid">Book ID</label>
+                    <input type="number" min="0" id="bookid" name="bookid">
+                    <label for="changeprice">New Price</label>
+                    <input type="number" id="changeprice" name="changeprice">
+                    <input type="submit" value="change price" id="priceChangeButton" class="toolbutton">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <div class="modal-under">
+            <p>Delete the book #<span id="varbookid"></span>?</p>
+            <button class="delete-button" id="deleteButton">Delete</button>
+          </div>
+        </div>
+      
+      </div>
+
+    <script src="front.js"></script>
+</body>
+</html>
